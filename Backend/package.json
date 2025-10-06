@@ -1,0 +1,19 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Learning MERN",
+  "keywords": [
+    "dev"
+  ],
+  "license": "ISC",
+  "author": "Akash",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/inde.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "prettier": "3.6.2"
+  }
+}
