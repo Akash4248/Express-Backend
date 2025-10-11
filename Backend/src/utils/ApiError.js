@@ -1,8 +1,8 @@
 class apierror extends Error{
     constructor(
+        code=500,
         message='something went wrong',
         stack='',
-        code=500,
         errors=[]){
             super(message)
             this.message=message
@@ -11,12 +11,12 @@ class apierror extends Error{
             this.errors=errors
             this.success=false
             
-            if(stack){
-                this.stack=stack
-            }
-            else{
-                Error.CaptureStackTrace(this,this.constructor)
-            }
+            // if(stack){
+            //     this.stack=stack
+            // }
+            // else{
+            //     Error.CaptureStackTrace(this,this.constructor)
+            // }
     }   
 }
 
