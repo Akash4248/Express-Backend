@@ -61,14 +61,14 @@ userShema.pre('save', async function (next) {
 })
 
 userShema.methods.ispasswordCorrect = async function (password) {
-    await bcrypt.compare(password, this.password)
+   return await bcrypt.compare(password, this.password)
 }
 
 userShema.methods.generateAccessToken = function () {
-    jwt.sign(
+   return jwt.sign(
         {
             _id: this._id,
-            emial: this.emial,
+            email: this.email,
             fullname: this.fullname,
             username: this.username,
 
@@ -80,7 +80,7 @@ userShema.methods.generateAccessToken = function () {
     )
 }
 userShema.methods.generateRefershToken = function () {
-    jwt.sign(
+   return jwt.sign(
         {
             _id: this._id,
         },
