@@ -1,11 +1,15 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
-import { apierror } from '../utils/ApiError.js'
-
+import { apierror } from '../utils/ApiError.js';
+import fs from 'fs'
 import { User } from '../models/user.model.js'
 import { uploadOnCloudinary } from '../utils/cloudinary.js'
 import { apiResponse } from "../utils/ApiResponse.js";
-import { access } from "fs";
+import { access, accessSync } from "fs";
 import jwt from 'jsonwebtoken'
+
+const deleteImageonCloudinary = asyncHandler(async (imagepath)=>{
+        
+})
 
 const generateAccesstokenAndRefreshToken=asyncHandler(
    async  (userId)=>{
@@ -198,4 +202,107 @@ const refreshAccessToken = asyncHandler(
 
     }
 )
-export { userRegister, userLogin, userLogout ,refreshAccessToken }
+
+const updateCurrentPassword = asyncHandler(async (req,res)=>{
+    const {oldpassword,newpassword} = req.body;
+    const user=req.user;
+    const ispasswordcorrect = await user.ispasswordCorrect(oldpassword);
+    if(!ispasswordcorrect) 
+        throw new apierror(400,'Invalid Old Password')
+    user.password=newpassword;
+    await user.save({validateBeforeSave:false})
+
+   return res.status(200)
+    .json(new apiResponse(200,
+        {},
+        "password Updated Successfully"
+    ))
+
+})
+
+const getCurrentUser = asyncHandler(async (req,res)=>{
+    // const user = await User.findById(req.user?._id).select("-password")
+    // if(!user) {
+    //     throw new apierror(400,"User Not Found! in db")
+    // }
+   return  res.status(200)
+    .json(
+        new apiResponse(200,req.user,"User Fetched Successfully")
+    )
+
+})
+
+const updateAccountDetails = asyncHandler(async (req,res)=>{
+    const {email,fullname} = req.body
+        if(!email || !fullname ) throw new apierror(400,"all the feilds are Required!")
+    const updateduser = await User.findByIdAndUpdate(req.user?._id,{
+        $set:{
+            email,
+            fullname
+        }
+    },{
+        new: true
+    }).select("-password")
+
+    if(!updateduser) throw new apierror(400,"Failed TO update User")
+
+    return res.
+    status(200)
+    .json(
+        new apiResponse(200,updateduser,"user Updated Successfully")
+    )
+
+})
+
+const updateAvatar = asyncHandler(async (req,res)=>{
+    const loaclAvatarPath= req.file?.path
+    if(!loaclAvatarPath) throw new apierror(400,'Avatar Image is Not Uploaded Correctly')
+  const avatar = await uploadOnCloudinary(loaclAvatarPath)
+    if(!avatar.url) throw new apierror(500,'Failed To upload the avatar on Cloudinary!')
+    
+    const user = await User.findByIdAndUpdate(req.user?._id,{
+        $set:{
+            avatar:avatar.url
+        }
+    },{
+        new:true
+    }).select("-password")
+    if(!user) throw new apierror(500,'Failed to Upadate the Avatar in DB')
+    
+    return res.
+    status(200)
+    .json(new apiResponse(200,user))
+})
+
+const updatecoverImage = asyncHandler(async (req,res)=>{
+    const loaclcoverImage= req.file?.path
+    if(!loaclcoverImage) throw new apierror(400,'Cover Image is Not Uploaded Correctly')
+  const coverImage = await uploadOnCloudinary(loaclcoverImage)
+    if(!coverImage.url) throw new apierror(500,'Failed To upload the coverImage  on Cloudinary!')
+    
+    const user = await User.findByIdAndUpdate(req.user?._id,{
+        $set:{
+            coverImage:coverImage.url
+        }
+    },{
+        new:true
+    }).select("-password")
+    if(!user) throw new apierror(500,'Failed to Upadate the coverImage in DB')
+    
+    return res.
+    status(200)
+    .json(new apiResponse(200,user))
+})
+
+const getChannelDetails= asyncHandler(async (req,res)=>{
+
+})
+
+
+export { userRegister, userLogin, userLogout ,refreshAccessToken 
+    ,updateCurrentPassword
+    ,getCurrentUser
+    ,updateAccountDetails,
+    updateAvatar,
+    updatecoverImage
+}
