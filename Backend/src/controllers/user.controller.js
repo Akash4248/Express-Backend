@@ -8,7 +8,7 @@ import { access, accessSync } from "fs";
 import jwt from 'jsonwebtoken'
 
 const deleteImageonCloudinary = asyncHandler(async (imagepath)=>{
-        
+        //to  be implemented
 })
 
 const generateAccesstokenAndRefreshToken=asyncHandler(
@@ -295,7 +295,75 @@ const updatecoverImage = asyncHandler(async (req,res)=>{
 })
 
 const getChannelDetails= asyncHandler(async (req,res)=>{
+    const {username} = req.params;
+    if(!username?.trim())
+        throw new apierror(400,'Username feild is empty')
+    const channel = await User.aggregate(
+        [
+            {
+                $match:{
+                    username:username?.toLowerCase()
+                }
+            },
+            {
+                $lookup:{
+                    from:"subscriptions",
+                    localField:"_id",
+                    foreignField:"Channel",
+                    as:"subscribers"
+                }
+            },
+            {
+                $lookup:{
+                    from:"subscriptions",
+                    localField:"_id",
+                    foreignField:"subsciber",
+                    as:"subscribedTo"
+                }
 
+            },
+            {
+                $addFields:{
+                    SubscriberCount:{
+                        $size:"$subscribers"
+                    },
+                    channelsSubscribedTo:{
+                        $size: "$subscibedTo"
+                    },
+                    issubscibed:{
+                        if:{
+                            $in:[req.user?._id,"$subscribers.subscriber"]
+                        },
+                        then:true,
+                        else:false
+
+                    }
+                }
+            },
+            {
+                $project:{
+                    email:1,
+                    username:1,
+                    fullname:1,
+                    SubscriberCount:1,
+                    channelsSubscribedTo:1,
+                    issubscibed:1,
+                    avatar:1,
+                    coverImage:1,
+
+                }
+
+
+            }
+        ]
+    )
+
+    console.log(channel)
+    if(!channel?.length())
+        throw new apierror(500,"fiailed TO fetch Channel Details Or Channel Does Not Exist")
+
+    res.status(200)
+    .json(new apiResponse(200,channel[0],"Channel Details fetched Successfully"))
 })
 
 
@@ -304,5 +372,6 @@ export { userRegister, userLogin, userLogout ,refreshAccessToken
     ,getCurrentUser
     ,updateAccountDetails,
     updateAvatar,
-    updatecoverImage
+    updatecoverImage,
+    getChannelDetails
 }
